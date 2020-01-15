@@ -40,11 +40,11 @@ namespace lab_3
 
             
             c = FuncC(c, a, b, p, true) % p;
-            d = FuncC(FuncC(d, a, b, p, true) % p, a, b, p, true) % p;
+            d = FuncC(FuncC(d, a, b, p, false) % p, a, b, p, false) % p;
             while (c % p != d)
             {
                 c = FuncC(c, a, b, p, true) % p;
-                d = FuncC(FuncC(d, a, b, p, true) % p, a, b, p, true) % p;
+                d = FuncC(FuncC(d, a, b, p, false) % p, a, b, p, false) % p;
             }
 
             ulong xres, logres;
