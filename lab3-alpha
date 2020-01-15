@@ -1,0 +1,210 @@
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Numerics;
+
+namespace lab_3
+{
+    class Program
+    {
+        public static int xc, xd, logc, logd;
+        static void Main(string[] args)
+        {
+            
+            xc = 2;
+            xd = 2;
+            logc = 2;
+            logd = 2;
+            Console.WriteLine("Введите p: ");
+            ulong p = ulong.Parse(Console.ReadLine());
+            Console.WriteLine("Введите a: ");
+            ulong a = ulong.Parse(Console.ReadLine());;
+            Console.WriteLine("Введите b: ");
+            ulong b = ulong.Parse(Console.ReadLine());;
+            Console.WriteLine("p = " + p + ", a = " + a + ", b = " + b);
+            ulong phi = EilerFunc(p);
+            ulong res = OrderFunc(phi, p, a);
+            
+            if (BinpowMod(a, res, p) != 1)
+            {
+                Console.WriteLine("Порядок не найден");
+                return;
+            }
+            Console.WriteLine("Порядок a равен " + res);
+
+            int u = 2;
+            int v = 2;
+            ulong c = (BinpowMod(a, Convert.ToUInt64(u), p) * BinpowMod(b, Convert.ToUInt64(v), p)) % p;
+            ulong d = c;
+
+            
+            c = FuncC(c, a, b, p, true) % p;
+            d = FuncC(FuncC(d, a, b, p, true) % p, a, b, p, true) % p;
+            while (c % p != d)
+            {
+                c = FuncC(c, a, b, p, true) % p;
+                d = FuncC(FuncC(d, a, b, p, true) % p, a, b, p, true) % p;
+            }
+
+            ulong xres, logres;
+            xres = Convert.ToUInt64(xd - xc);
+            logres = Convert.ToUInt64(logd - logc);
+            
+            ulong[] mas = AllDerivatives(xres, logres, res);
+            
+            if (mas[0] == 0)
+            {
+                Console.WriteLine("X не найден");
+            }
+            else
+            {
+                for (int i = 0; i < mas.Length; i++)
+                {
+                    if (BinpowMod(a, mas[i], p) != b)
+                    {
+                        Console.WriteLine(mas[i] + " не подходит");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ответ: X = " + mas[i]);
+                        return;
+                    }
+                }
+                Console.WriteLine("Х не найден.");
+            }
+
+            Console.ReadLine();
+        }
+
+        private static ulong[] AllDerivatives(ulong xres, ulong logres, ulong res) 
+        {
+            
+            ulong[] derivatvies;
+            ulong Nod = NOD(xres, res);
+            if (Nod == 1)
+            {
+                for (ulong i = 1;; i++)
+                {
+                    if ((xres * i) % res == res - logres)
+                        return new[] {i};
+                }
+            }
+            
+            if (logres % Nod != 0)
+                return new ulong[] {0};
+            derivatvies = new ulong[Nod];
+            xres /= Nod;
+            res /= Nod;
+            logres /= Nod;
+
+                ulong count = 2;
+            for (ulong i = 1; i < 100000; i++)
+            {
+                if ((xres * i) % res == res - logres)
+                {
+                    derivatvies[0] = i;
+                    break;
+                }
+
+                if (i == 99999)
+                {
+                    Console.WriteLine("Что-то пошло не так, делители не были найдены.");
+                    return new ulong[]{0};
+                }
+            }
+            while (count != Nod)
+            {
+                derivatvies[count] = derivatvies[0] + res * count;
+                count++;
+            }
+
+            return derivatvies;
+        }
+
+        private static ulong NOD(ulong a, ulong b)
+        {
+            while(b != 0)
+            { 
+                ulong r = a % b;
+                a = b;
+                b = r;
+            }
+            return a;
+        }
+        private static ulong EilerFunc(ulong n) 
+        {
+            ulong result = n;    
+            for (ulong i = 2; i * i <= n; ++i)        
+                if (n % i == 0)
+                {
+                    while (n % i == 0)
+                        n /= i;
+                    result -= result / i;
+                }
+            if (n > 1)
+                result -= result / n;
+            return result;
+        }
+
+        private static ulong OrderFunc(ulong phi, ulong n, ulong a)
+        {
+            List<ulong> orders = new List<ulong>();
+            for (ulong i = 2; i <= phi; i++)
+            {
+                if (phi % i == 0)
+                {
+                    orders.Add(i);
+                }
+            }
+            foreach (ulong number in orders)
+            {
+                ulong result = BinpowMod(a, number, n);
+                if (result == 1)
+                {
+                    return number;
+                }
+            }
+            return 0;
+
+
+        }
+
+        private static ulong BinpowMod(ulong x, ulong n, ulong mod)
+        {
+            if (n == 0)
+                return 1;
+            if (n % 2 == 1)
+                return BinpowMod(x, n - 1, mod) * x % mod;
+            var b = BinpowMod(x, n / 2, mod);
+            return b * b % mod;
+        }
+
+        private static ulong FuncC(ulong c, ulong a, ulong b, ulong p, bool CorD)
+        {
+            if (CorD)
+            {
+                if (c <= p / 2)
+                {
+                    logc += 1;
+                    return a * c;
+                }
+                else
+                {
+                    xc += 1;
+                    return b * c;
+                }
+            }
+            if (c <= p / 2)
+            {
+                logd += 1;
+                return a * c;
+            }
+            else
+            {
+                xd += 1;
+                return b * c;
+            }
+        }
+    }
+}
